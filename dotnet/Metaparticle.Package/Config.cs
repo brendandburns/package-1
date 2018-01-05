@@ -1,6 +1,9 @@
 using System;
 
 namespace Metaparticle.Package {
+    public class Files : Attribute {
+        public string[] Paths { get; set; }
+    }
     public class Config : Attribute {
         public bool Verbose { get; set; }
 

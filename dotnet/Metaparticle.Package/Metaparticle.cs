@@ -11,6 +11,7 @@ namespace Metaparticle.Package
 {
     public class Driver
     {
+        private Files files;
         private Config config;
         private RuntimeConfig runtimeConfig;
 
@@ -70,7 +71,6 @@ namespace Metaparticle.Package
             {
                 dir = "bin/release/netcoreapp2.0/debian.8-x64/publish";
                 Exec("dotnet", "publish -r debian.8-x64 -c release", stdout: o, stderr: e);
-                //var dirInfo = new UnixDirectoryInfo(dir);
                 var files = Directory.GetFiles(dir);
                 foreach (var filePath in files)
                 {
@@ -134,6 +134,11 @@ namespace Metaparticle.Package
             var instructions = new List<Instruction>();
             instructions.Add(new Instruction("FROM", "debian:9"));
             instructions.Add(new Instruction("RUN", " apt-get update && apt-get -qq -y install libunwind8 libicu57 libssl1.0 liblttng-ust0 libcurl3 libuuid1 libkrb5-3 zlib1g"));
+            if (files != null) {
+                foreach (var path in files.Paths) {
+                    instructions.Add(new Instruction("COPY", string.Format("{0} {1}", path, path)));
+                }
+            }
             // TODO: lots of things here are constant, figure out how to cache for perf?
             instructions.Add(new Instruction("COPY", string.Format("* /exe/", dir)));
             instructions.Add(new Instruction("CMD", string.Format("/exe/{0} {1}", exe, getArgs(args))));
@@ -173,6 +178,7 @@ namespace Metaparticle.Package
             }
             Config config = new Config();
             RuntimeConfig runtimeConfig = null;
+            Files files = null;
             var trace = new StackTrace();
             foreach (object attribute in trace.GetFrame(1).GetMethod().GetCustomAttributes(true))
             {
@@ -183,8 +189,12 @@ namespace Metaparticle.Package
                 if (attribute is RuntimeConfig) {
                     runtimeConfig = (RuntimeConfig) attribute;
                 }
+                if (attribute is Files) {
+                    files = (Files) attribute;
+                }
             }
             var mp = new Driver(config, runtimeConfig);
+            mp.files = files;
             mp.Build(args);
         }
     }
