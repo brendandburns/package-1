@@ -1,7 +1,9 @@
 import setuptools
-import os
 
-exec(open('./metaparticle_pkg/version.py').read())
+config = {
+    'version': '0.6.6',
+    'license': 'MIT'
+}
 
 setuptools.setup(
     name='metaparticle_pkg',
